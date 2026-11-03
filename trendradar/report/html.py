@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Callable
 from trendradar.report.helpers import html_escape, calculate_rank_trend
 from trendradar.utils.time import convert_time_for_display
 from trendradar.ai.formatter import render_ai_analysis_html_rich
+from trendradar.report.dashboard import STYLE, SCRIPT
 
 
 def render_html_content(
@@ -2165,6 +2166,8 @@ def render_html_content(
     for region in region_order:
         content = region_contents.get(region, "")
         if region == "new_items":
+            if not show_new_section:
+                continue
             # 特殊处理 new_items 区域（包含热榜新增和 RSS 新增两部分）
             new_html, rss_new = content
             if new_html:
@@ -2481,6 +2484,7 @@ def render_html_content(
             }
 
             function prepareForScreenshot() {
+                document.body.classList.add('exporting-report');
                 var state = {
                     wasWide: document.body.classList.contains('wide-mode'),
                     hiddenGroups: []
@@ -2514,6 +2518,7 @@ def render_html_content(
             }
 
             function restoreAfterScreenshot(state) {
+                document.body.classList.remove('exporting-report');
                 if (state.wasWide) document.body.classList.add('wide-mode');
                 if (state.wasDark) document.body.classList.add('dark-mode');
                 var groups = document.querySelectorAll('.word-group[data-tab-index]');
@@ -2917,7 +2922,7 @@ def render_html_content(
                 }
 
                 // 热点关键词区
-                var wordGroups = document.querySelectorAll('.hotlist-section > .word-group');
+                var wordGroups = document.querySelectorAll('.hotlist-section > .word-group, .dashboard-hot-grid > .word-group');
                 if (wordGroups.length) {
                     lines.push('## 热点新闻');
                     lines.push('');
@@ -3218,4 +3223,6 @@ def render_html_content(
     </html>
     """
 
+    if display_mode == "platform":
+        html = html.replace("</head>", STYLE + "</head>").replace("</body>", SCRIPT + "</body>")
     return html
