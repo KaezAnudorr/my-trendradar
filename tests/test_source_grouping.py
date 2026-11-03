@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 with patch.dict(os.environ, {"LITELLM_LOCAL_MODEL_COST_MAP": "True"}):
     from trendradar.__main__ import NewsAnalyzer
-    from trendradar.notification.renderer import render_feishu_content
+    from trendradar.notification.splitter import split_content_into_batches
 
 
 class SourceGroupingTests(unittest.TestCase):
@@ -55,9 +55,11 @@ class SourceGroupingTests(unittest.TestCase):
                         self.assertEqual([item["title"] for item in main[0]["titles"]], ["First", "Third"])
                         self.assertEqual(main[0]["titles"][0]["url"], "https://example.com/1")
                         self.assertTrue(main[0]["titles"][0]["is_new"])
-                        rendered = render_feishu_content(
-                            {"stats": [], "new_titles": [], "failed_ids": []}, rss_items=main,
-                        )
+                        rendered = "\n".join(split_content_into_batches(
+                            {"stats": [], "new_titles": [], "failed_ids": []},
+                            "feishu", rss_items=main, rss_new_items=new,
+                            display_mode="platform",
+                        ))
                         self.assertIn("Huxiu", rendered)
                         self.assertIn("Wallstreet", rendered)
                     else:
