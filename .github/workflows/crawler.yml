@@ -7,6 +7,10 @@ on:
       - config/**
       - trendradar/report/**
       - tests/test_dashboard.py
+      - tests/test_dailyhot_feeds.py
+      - integrations/dailyhot/**
+      - tools/dailyhot_feeds.py
+      - .github/actions/dailyhot/**
       - .github/workflows/crawler.yml
   schedule:
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -141,7 +145,18 @@ jobs:
           fi
 
       - name: Verify source dashboard
-        run: uv run python -m unittest discover -s tests -p test_dashboard.py -v
+        run: |
+          uv run python -m unittest discover -s tests -p test_dashboard.py -v
+          uv run python -m unittest discover -s tests -p test_dailyhot_feeds.py -v
+
+      - name: Prepare DailyHot source snapshots
+        id: dailyhot
+        uses: ./.github/actions/dailyhot
+        continue-on-error: true
+
+      - name: Report DailyHot setup failure
+        if: steps.dailyhot.outcome == 'failure'
+        run: echo '::warning::DailyHot setup failed; existing RSS feeds will still be fetched. Inspect the DailyHot step logs.'
 
       - name: Run crawler
         if: success()
@@ -185,6 +200,17 @@ jobs:
           name: trendradar-report
           path: output/html/latest/*.html
           if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload DailyHot integration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dailyhot-integration
+          path: |
+            output/dailyhot/*.json
+            output/dailyhot-server.log
+          if-no-files-found: ignore
           retention-days: 3
 
       # --------------------------------------------------------------------------------
