@@ -1,0 +1,25 @@
+name: Validate DailyHot RSS sources
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - .github/workflows/check-dailyhot.yml
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Probe public RSS endpoints
+        run: python tools/check_dailyhot.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dailyhot-source-check
+          path: dailyhot-check.json
+          retention-days: 3
