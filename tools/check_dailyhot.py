@@ -1,5 +1,6 @@
 """Probe candidate DailyHot RSS routes without changing subscriptions."""
 import json
+import os
 import urllib.request
 import urllib.error
 import xml.etree.ElementTree as ET
@@ -13,7 +14,7 @@ ROUTES = ['guokr', 'ifanr', 'geekpark', '51cto', 'csdn', 'hellogithub',
 
 
 def probe(route):
-    url = f'https://api-hot.imsyy.top/{route}?rss=true'
+    url = os.environ.get('DAILYHOT_BASE_URL', 'https://api-hot.imsyy.top').rstrip('/') + f'/{route}?rss=true'
     result = {'route': route, 'url': url, 'usable': False}
     try:
         request = urllib.request.Request(url, headers={'User-Agent': 'TrendRadar-source-check/1.0'})
