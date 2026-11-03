@@ -1117,11 +1117,13 @@ class NewsAnalyzer:
         # 从 display.regions.rss 统一控制 RSS 分析和展示
         rss_display_enabled = self.ctx.config.get("DISPLAY", {}).get("REGIONS", {}).get("RSS", True)
 
-        # 加载关键词配置
-        try:
-            word_groups, filter_words, global_filters = self.ctx.load_frequency_words(self.frequency_file)
-        except FileNotFoundError:
-            word_groups, filter_words, global_filters = [], [], []
+        # RSS 可独立关闭关键词筛选；热榜仍使用原有关键词规则。
+        word_groups, filter_words, global_filters = [], [], []
+        if self.ctx.rss_config.get("KEYWORD_FILTER", True):
+            try:
+                word_groups, filter_words, global_filters = self.ctx.load_frequency_words(self.frequency_file)
+            except FileNotFoundError:
+                pass
 
         timezone = self.ctx.timezone
         max_news_per_keyword = self.ctx.config.get("MAX_NEWS_PER_KEYWORD", 0)
