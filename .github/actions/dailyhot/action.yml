@@ -1,0 +1,43 @@
+name: Prepare DailyHot feeds
+description: Fetch pinned DailyHot sources and serve JSON Feed snapshots within this job
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v6
+      with:
+        repository: imsyy/DailyHotApi
+        ref: 36c77e3bd891c11642d314cfb229bf31646704de
+        path: .dailyhot-api
+        persist-credentials: false
+    - uses: actions/setup-node@v6
+      with:
+        node-version: '22'
+    - name: Build DailyHotApi
+      shell: bash
+      working-directory: .dailyhot-api
+      run: |
+        npm install --ignore-scripts --no-audit --no-fund
+        npm run build
+    - name: Export and verify new feeds with the TrendRadar parser
+      shell: bash
+      env:
+        NODE_ENV: development
+        PORT: '6688'
+        USE_LOG_FILE: 'false'
+      run: |
+        mkdir -p output/dailyhot
+        (cd .dailyhot-api && node dist/index.js) > output/dailyhot-server.log 2>&1 &
+        API_PID=$!
+        trap 'kill "$API_PID"' EXIT
+        for i in $(seq 1 30); do
+          if curl -fsS http://127.0.0.1:6688/all > /dev/null; then break; fi
+          sleep 1
+        done
+        curl -fsS http://127.0.0.1:6688/all > /dev/null
+        PYTHONPATH=. uv run python tools/dailyhot_feeds.py
+        nohup python -m http.server 6689 --bind 127.0.0.1 --directory output/dailyhot > output/dailyhot-feed-server.log 2>&1 &
+        for i in $(seq 1 10); do
+          if curl -fsS http://127.0.0.1:6689/integration-results.json > /dev/null; then break; fi
+          sleep 1
+        done
+        curl -fsS http://127.0.0.1:6689/integration-results.json > /dev/null
