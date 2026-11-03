@@ -1,0 +1,54 @@
+name: Test AI and Feishu
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - .github/workflows/test-ai-feishu.yml
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v7
+      - name: Install dependencies
+        run: uv sync --frozen --no-dev
+
+      # Only the runner's local copy is changed; scheduled jobs stay report-only.
+      - name: Enable AI and notification for this test
+        run: |
+          uv run python - <<'PY'
+          from pathlib import Path
+          import yaml
+          path = Path("config/config.yaml")
+          config = yaml.safe_load(path.read_text(encoding="utf-8"))
+          config["notification"]["enabled"] = True
+          config["ai_analysis"].update(enabled=True, include_rss=True)
+          path.write_text(yaml.safe_dump(config, allow_unicode=True, sort_keys=False), encoding="utf-8")
+          PY
+
+      - name: Generate AI report and send to Feishu
+        env:
+          AI_ANALYSIS_ENABLED: "true"
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          AI_MODEL: ${{ secrets.AI_MODEL }}
+          AI_API_BASE: ${{ secrets.AI_API_BASE }}
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+        run: uv run python -m trendradar
+
+      - name: Upload AI test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trendradar-ai-test
+          path: output/html/latest/*.html
+          if-no-files-found: error
+          retention-days: 3
