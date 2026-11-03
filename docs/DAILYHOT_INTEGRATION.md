@@ -1,55 +1,55 @@
-# DailyHotApi 接入验证
+# 消息源选择与 DailyHot 接入
 
-## 结论：适合与 TrendRadar 在同一个 Actions job 中临时运行
+## 在现有 Actions 中读取新增来源
 
-不需要另购常驻服务器。每次定时任务先启动 DailyHotApi，TrendRadar 通过本机 RSS 地址读取数据，生成报告后结束服务。它不会提供全天在线的公共 API。
+定时抓取会临时构建并运行固定版本 DailyHotApi，将选定来源转换为 TrendRadar 已支持的 JSON Feed，再与现有 RSS 一起生成报告。无需常驻服务器，任务结束后临时服务随 runner 退出。
 
-当前仅验证可行性，未把新增源加入正式订阅。现有 15 个 RSS 源、来源分组、豆瓣移除及 AI/推送开关保持原配置。
+- 基础订阅：15 个，仍保存在 `config/config.yaml`。
+- DailyHot 补充：11 个，配置在 `integrations/dailyhot/feeds.yaml`。
+- 默认来源总数：26 个 RSS/JSON Feed，另有原来的 11 个热榜平台。
+- AI、通知开关没有开启；手动 AI/飞书测试工作流也使用相同新增源。
+- 豆瓣不加入。DailyHot 的 CSDN、LinuxDo、Product Hunt、GameRes 等失败或空源不加入。
 
-## 实测结果
+## 重复来源按内容完整度选，而不是按条数硬替换
 
-测试日期：2026-11-03。
-上游版本：imsyy/DailyHotApi@36c77e3bd891c11642d314cfb229bf31646704de。
-[Actions 验证记录](https://github.com/KaezAnudorr/my-trendradar/actions/runs/41606559825)。
+2026-11-03 在同一 GitHub Actions runner 中对比；下表是接口返回数量，尚未经过现有文章时效过滤。
 
-文档公共实例 api-hot.imsyy.top 在 GitHub Actions 上无法解析域名，16 条候选路由全部无法访问。
+| 来源 | 对比结果 | 正式选择 |
+|---|---|---|
+| IT之家 | 旧 RSSHub 10 条；DailyHot 48 条但仅 39 个不同链接，抽查链接返回 404；官方 RSS 60 条，均有摘要和发布时间 | 改用官方 RSS，保留原 feed ID 和 1 天时效 |
+| Hacker News | 旧原生源默认 20 条；DailyHot 返回 30 条，其中 28 条有 HTTP(S) 链接，缺文章时间及摘要；原生源 count=30 实测 30 条且元数据完整 | 原生源扩到 30 条 |
+| GitHub 趋势 | 两边同样 15 个仓库；现有源保留 owner/repo 完整名称，15 条有描述，DailyHot 14 条有描述 | 保留现有源，不重复加 |
+| V2EX 热门 | 两边都是相同的 9 个帖子；现有源有发布时间，DailyHot 无 | 保留现有源 |
+| 知乎日报 | 两边都是相同的 4 篇；现有源有摘要和时间，DailyHot 无 | 保留现有源 |
+| 少数派 | 最新文章 10 条与热门精选 40 条不重合；热门精选含较早发表的文章 | 保留最新源，并单独加入热门精选快照 |
+| 36氪 | 现有 20 条是 newsflashes 快讯；DailyHot 50 条是 /p/ 人气文章，不重合 | 两个栏目互补，分别保留 |
+| 虎嗅 | 现有 20 条是前沿科技文章；DailyHot 20 条是 /moment/ 24 小时快讯，不重合 | 两个栏目互补，分别保留 |
+| 掘金 | 现有 12 条为 AI 编程栏目，有摘要和时间；DailyHot 50 条为泛开发热榜，缺摘要和时间 | 保留现有 AI 编程源，不用泛榜替代 |
 
-同一个 Actions 中构建并临时运行上游项目，检测 RSS XML、非空标题和 HTTP(S) 文章链接：
+[九组对比及逐篇证据](https://github.com/KaezAnudorr/my-trendradar/actions/runs/41608730077)。
+[官方 RSS、HN 扩容和 IT 链接的补充实测](https://github.com/KaezAnudorr/my-trendradar/actions/runs/41609565315)。
 
-| 路由 | 条目 | 结果 |
-|---|---:|---|
-| guokr | 30 | 通过 |
-| ifanr | 20 | 通过 |
-| geekpark | 20 | 通过 |
-| 51cto | 50 | 通过 |
-| hellogithub | 20 | 通过 |
-| yystv | 12 | 通过 |
-| weread | 20 | 通过 |
-| smzdm | 50 | 通过 |
-| github | 15 | 通过 |
-| huxiu | 20 | 通过 |
-| 36kr | 50 | 通过 |
-| csdn | — | HTTP 500 |
-| linuxdo | — | HTTP 500 |
-| producthunt | — | HTTP 500 |
-| gameres | 0 | 空订阅 |
-| hackernews | 30 | 28 条有合格链接，2 条不合格，未列为完整通过 |
+## 新增的 11 个来源
 
-“通过”表示本次实际抓取通过，不保证后续持续可用；这里未执行 TrendRadar 完整抓取到推送的新增源集成测试。
+果壳、爱范儿、极客公园、51CTO、HelloGitHub、游研社、微信读书、什么值得买，以及少数派热门精选、36氪人气文章、虎嗅24小时快讯。
 
-## 推荐接入方式
+新增源在名称中标注“快照”。文章型原生 RSS 继续按原来的 1/3/7 天时效筛选；快照源展示当前榜单，`max_age_days: 0`，保留全部条目，不把旧发表时间与“仍在榜”混淆。
 
-1. 在现有抓取 job 中检出固定版本 DailyHotApi，安装依赖、构建。
-2. 临时启动服务并检查就绪。
-3. 用 RSS 地址，例如 `http://127.0.0.1:6688/ifanr?rss=true`，配置新增来源。
-4. 在同一个 job 中运行 TrendRadar，复用现有 RSS、报告、AI 和通知路径。
-5. 任务结束关闭临时服务。
+## 保留原始元数据，不伪造发布时间
 
-优先考虑爱范儿、极客公园、HelloGitHub、游研社、果壳；已有 GitHub 趋势、虎嗅、36氪的来源不应直接重复加入。
+上游 RSS 模式把每条文章的 pubDate 都设为接口更新时间。这里改读 JSON 数据，以 `timestamp` 中的文章时间生成 `date_published`；上游没有提供文章时间时留空，不用抓取时间填充。摘要、作者、原文链接会保留，同源重复链接去重，空标题或非 HTTP(S) 链接不加入。
 
-## 时间含义必须区分
+每个来源导出后，使用 TrendRadar 自身 RSSParser 检查条目没有丢失，再启用到本次 runner 的配置中。永久配置不写入 localhost 地址，因此原来的本地/Docker 入口仍可读取原先 15 个来源。
 
-上游 `src/utils/getRSS.ts` 将 RSS 项目的发布时间设置为接口 `updateTime`，并非每篇文章原始发布时间。因此这类源应作为“热榜快照”，不能直接解释为“最近三天发表的文章”。接入时需与现有文章型 RSS 的时效含义区分，避免旧文章持续被刷新为新文章。
+## 查看运行结果或调整来源
+
+- 新增列表：`integrations/dailyhot/feeds.yaml`，删除一行即可取消一个新增源。
+- 共用 Actions：`.github/actions/dailyhot/action.yml`。
+- 转换及运行时配置：`tools/dailyhot_feeds.py`。
+- 在抓取任务的 Artifacts 下载 `dailyhot-integration`，其中 `integration-results.json` 包含每个来源的实际条数、时间覆盖和失败原因，其他 JSON 是本次可复查的原始订阅快照。
+- 单源失败会产生 Actions warning，跳过该新增源，保留现有订阅；DailyHot 启动失败也会明确告警。
+- 手动 AI/飞书测试仅由 workflow_dispatch 触发，修改工作流不再自动调用模型或发送消息。
+- 上游固定在 `imsyy/DailyHotApi@36c77e3bd891c11642d314cfb229bf31646704de`。
 
 项目文档：https://github.com/imsyy/DailyHotApi
-GitHub runner 文档：https://docs.github.com/en/actions/concepts/runners/github-hosted-runners
+HN count 参数：https://hnrss.github.io/
