@@ -10,7 +10,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -22,4 +22,49 @@ jobs:
         with:
           name: dailyhot-source-check
           path: dailyhot-check.json
+          retention-days: 3
+
+  upstream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: imsyy/DailyHotApi
+          ref: 36c77e3bd891c11642d314cfb229bf31646704de
+          path: dailyhot-api
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install and build the pinned upstream
+        working-directory: dailyhot-api
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run build
+      - name: Test upstream routes on an ephemeral local server
+        env:
+          DAILYHOT_BASE_URL: http://127.0.0.1:6688
+          NODE_ENV: development
+          PORT: '6688'
+          USE_LOG_FILE: 'false'
+        run: |
+          (cd dailyhot-api && node dist/index.js) > dailyhot-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:6688/all > /dev/null; then break; fi
+            sleep 1
+          done
+          python tools/check_dailyhot.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dailyhot-upstream-check
+          path: |
+            dailyhot-check.json
+            dailyhot-server.log
           retention-days: 3
