@@ -187,24 +187,9 @@ rss:
       url: "https://rsshub.ktachibana.party/v2ex/topics/hot"
       max_age_days: 1
 
-    - id: "github-trending"
-      name: "GitHub 每日趋势"
-      url: "https://rsshub.ktachibana.party/github/trending/daily/any"
-      max_age_days: 1
-
     - id: "zhihu-daily"
       name: "知乎日报"
       url: "https://rsshub.ktachibana.party/zhihu/daily"
-      max_age_days: 3
-
-    - id: "douban-coming"
-      name: "豆瓣·即将上映"
-      url: "https://rsshub.ktachibana.party/douban/movie/coming"
-      max_age_days: 7
-
-    - id: "gcores"
-      name: "机核文章"
-      url: "https://rsshub.ktachibana.party/gcores/articles"
       max_age_days: 3
 
 
