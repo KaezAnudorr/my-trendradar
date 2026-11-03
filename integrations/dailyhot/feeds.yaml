@@ -1,0 +1,14 @@
+# These sources are enabled only by the DailyHot Actions integration.
+# max_age_days=0 means the current list, not articles published today.
+feeds:
+  - {id: dailyhot-guokr, route: guokr, name: '果壳 · 热榜快照'}
+  - {id: dailyhot-ifanr, route: ifanr, name: '爱范儿 · 热榜快照'}
+  - {id: dailyhot-geekpark, route: geekpark, name: '极客公园 · 热榜快照'}
+  - {id: dailyhot-51cto, route: 51cto, name: '51CTO · 热榜快照'}
+  - {id: dailyhot-hellogithub, route: hellogithub, name: 'HelloGitHub · 热榜快照'}
+  - {id: dailyhot-yystv, route: yystv, name: '游研社 · 热榜快照'}
+  - {id: dailyhot-weread, route: weread, name: '微信读书 · 榜单快照'}
+  - {id: dailyhot-smzdm, route: smzdm, name: '什么值得买 · 热榜快照'}
+  - {id: dailyhot-sspai, route: sspai, name: '少数派 · 热门精选快照'}
+  - {id: dailyhot-36kr, route: 36kr, name: '36氪 · 人气文章快照'}
+  - {id: dailyhot-huxiu, route: huxiu, name: '虎嗅 · 24小时快讯快照'}
