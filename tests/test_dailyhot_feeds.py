@@ -19,6 +19,7 @@ class DailyHotFeedTest(unittest.TestCase):
              'desc': 'Original summary', 'author': 'Author'},
             {'title': 'Without publication date', 'url': 'https://example.com/two', 'timestamp': 0},
             {'title': 'Broken link', 'url': '获取失败'},
+            {'title': 'Duplicate link', 'url': 'https://example.com/one'},
         ]}
         feed = make_feed(raw, 'Source · 热榜快照')
         items = RSSParser().parse(json.dumps(feed))
