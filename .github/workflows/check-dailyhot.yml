@@ -9,6 +9,7 @@ permissions:
   contents: read
 jobs:
   check:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -45,6 +46,9 @@ jobs:
         run: |
           npm install --ignore-scripts --no-audit --no-fund
           npm run build
+      - uses: astral-sh/setup-uv@v7
+      - name: Install TrendRadar dependencies for comparison
+        run: uv sync --frozen --no-dev
       - name: Test upstream routes on an ephemeral local server
         env:
           DAILYHOT_BASE_URL: http://127.0.0.1:6688
@@ -59,12 +63,13 @@ jobs:
             if curl -fsS http://127.0.0.1:6688/all > /dev/null; then break; fi
             sleep 1
           done
-          python tools/check_dailyhot.py
+          PYTHONPATH=. uv run python tools/compare_dailyhot.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: dailyhot-upstream-check
           path: |
             dailyhot-check.json
+            dailyhot-comparison.json
             dailyhot-server.log
           retention-days: 3
