@@ -217,7 +217,7 @@ report:
                                       # current = 当前榜单，按时推送当前在榜的匹配新闻（持续在榜的每次都出现）
                                       # incremental = 增量监控，只推送新增内容，零重复（没有新增时不推送）
 
-  display_mode: "keyword"             # 分组维度
+  display_mode: "platform"             # 分组维度
                                       # keyword = 按关键词分组显示
                                       # platform = 按平台/来源分组显示
 
