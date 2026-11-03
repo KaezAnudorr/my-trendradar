@@ -5,6 +5,8 @@ on:
     branches: [master]
     paths:
       - config/**
+      - trendradar/report/**
+      - tests/test_dashboard.py
       - .github/workflows/crawler.yml
   schedule:
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -137,6 +139,9 @@ jobs:
             echo "Error: Config missing"
             exit 1
           fi
+
+      - name: Verify source dashboard
+        run: uv run python -m unittest discover -s tests -p test_dashboard.py -v
 
       - name: Run crawler
         if: success()
