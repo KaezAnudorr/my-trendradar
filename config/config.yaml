@@ -122,7 +122,7 @@ rss:
                                       # - 正整数：只推送 N 天内的文章
                                       # - 0：禁用过滤，推送所有文章
 
-  # 精选订阅：中文科技阅读 + 开源 AI 一手信息 + 技术社区发现。
+  # 已有原生源及社区公共 RSSHub 来源；按云端实际抓取结果保留。
   # 周刊/技术长文放宽到 7 天，避免因更新频率较低而漏读。
   feeds:
     - id: "sspai"
@@ -151,6 +151,61 @@ rss:
       url: "https://hnrss.org/frontpage"
       max_items: 20
       max_age_days: 1
+
+    - id: "36kr"
+      name: "36氪快讯"
+      url: "https://rsshub.ktachibana.party/36kr/newsflashes"
+      max_age_days: 1
+
+    - id: "ithome"
+      name: "IT之家"
+      url: "https://rsshub.ktachibana.party/ithome/it"
+      max_age_days: 1
+
+    - id: "juejin-ai"
+      name: "掘金 AI 编程"
+      url: "https://rsshub.ktachibana.party/juejin/aicoding"
+      max_age_days: 3
+
+    - id: "huxiu-tech"
+      name: "虎嗅·前沿科技"
+      url: "https://rsshub.ktachibana.party/huxiu/channel/105"
+      max_age_days: 3
+
+    - id: "cls-red"
+      name: "财联社·加红电报"
+      url: "https://rsshub.ktachibana.party/cls/telegraph/red"
+      max_age_days: 1
+
+    - id: "wallstreetcn-ai"
+      name: "华尔街见闻·硬 AI"
+      url: "https://rsshub.ktachibana.party/wallstreetcn/news/ai"
+      max_age_days: 3
+
+    - id: "v2ex-hot"
+      name: "V2EX 热门"
+      url: "https://rsshub.ktachibana.party/v2ex/topics/hot"
+      max_age_days: 1
+
+    - id: "github-trending"
+      name: "GitHub 每日趋势"
+      url: "https://rsshub.ktachibana.party/github/trending/daily/any"
+      max_age_days: 1
+
+    - id: "zhihu-daily"
+      name: "知乎日报"
+      url: "https://rsshub.ktachibana.party/zhihu/daily"
+      max_age_days: 3
+
+    - id: "douban-coming"
+      name: "豆瓣·即将上映"
+      url: "https://rsshub.ktachibana.party/douban/movie/coming"
+      max_age_days: 7
+
+    - id: "gcores"
+      name: "机核文章"
+      url: "https://rsshub.ktachibana.party/gcores/articles"
+      max_age_days: 3
 
 
 # ===============================================================
@@ -478,7 +533,7 @@ advanced:
 
   # RSS 设置
   rss:
-    request_interval: 1000            # 请求间隔（毫秒）
+    request_interval: 10000           # 公共 RSSHub 曾返回 429，拉开请求间隔（毫秒）
     timeout: 15                       # 请求超时（秒）
     use_proxy: false                  # 是否使用代理（true=启用, false=不使用）
     proxy_url: ""                     # RSS 专属代理（留空则使用 crawler.default_proxy）
