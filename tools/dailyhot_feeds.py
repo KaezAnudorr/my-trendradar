@@ -12,10 +12,14 @@ def make_feed(data, title):
     if data.get('code') != 200 or not isinstance(data.get('data'), list):
         raise ValueError('DailyHot did not return a successful list')
     items = []
+    seen = set()
     for raw in data['data']:
         url = raw.get('url', '')
         if not raw.get('title') or not url.startswith(('https://', 'http://')):
             continue
+        if url in seen:
+            continue
+        seen.add(url)
         item = {'id': url, 'url': url, 'title': raw['title'], 'content_text': raw.get('desc') or ''}
         timestamp = raw.get('timestamp')
         if isinstance(timestamp, (int, float)) and timestamp > 0:
