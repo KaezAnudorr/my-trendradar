@@ -2,10 +2,6 @@ name: Test AI and Feishu
 
 on:
   workflow_dispatch:
-  push:
-    branches: [master]
-    paths:
-      - .github/workflows/test-ai-feishu.yml
 
 permissions:
   contents: read
@@ -27,6 +23,18 @@ jobs:
         run: |
           uv run python -m unittest discover -v -s tests -p "test_source_grouping.py"
           uv run python -m unittest discover -v -s tests -p "test_rss_total_count.py"
+
+      - name: Verify DailyHot feed adapter
+        run: uv run python -m unittest discover -v -s tests -p "test_dailyhot_feeds.py"
+
+      - name: Prepare DailyHot source snapshots
+        id: dailyhot
+        uses: ./.github/actions/dailyhot
+        continue-on-error: true
+
+      - name: Report DailyHot setup failure
+        if: steps.dailyhot.outcome == 'failure'
+        run: echo '::warning::DailyHot setup failed; this manual test will use the existing RSS sources.'
 
       # Only the runner's local copy is changed; scheduled jobs stay report-only.
       - name: Enable AI and notification for this test
