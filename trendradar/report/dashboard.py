@@ -11,7 +11,7 @@ body .header { background:none!important; color:var(--ink); padding:0 0 24px; bo
 body .header-title { color:var(--ink); font-size:29px; font-weight:750; letter-spacing:-1px; text-align:left; padding-left:52px; margin:0 0 8px; line-height:42px; }
 .header-title:before { content:'T'; position:absolute; left:0; top:0; width:40px; height:40px; border-radius:13px; background:#ed5b54; color:white; text-align:center; font-size:26px; font-weight:800; letter-spacing:-2px; }
 .dashboard-subtitle { margin:0 0 24px 52px; color:var(--muted); font-size:13px; text-align:left; }
-body .save-buttons { position:absolute; top:2px; right:0; gap:8px; }
+body .save-buttons { position:absolute; top:2px; right:0; left:auto; width:auto; justify-content:flex-end; gap:8px; }
 body .save-btn,body .save-dropdown-trigger,body .toggle-dark-btn { background:var(--paper)!important; color:var(--ink)!important; border:1px solid var(--line); border-radius:9px; height:36px; box-shadow:none; }
 body .header-info { display:flex; flex-wrap:wrap; gap:10px 26px; margin:0; padding:17px 22px; border:1px solid var(--line); border-radius:13px; background:var(--paper); }
 body .info-item { display:flex; align-items:baseline; gap:9px; padding:0; min-width:0; flex:none; }
@@ -32,7 +32,7 @@ body .rss-feeds-grid,.dashboard-hot-grid { display:grid!important; grid-template
 body .feed-group,body .word-group { display:flex; flex-direction:column; min-width:0; margin:0!important; padding:0!important; border:1px solid var(--line)!important; border-radius:15px; background:var(--paper)!important; box-shadow:0 3px 14px #20273503; overflow:hidden; }
 body .feed-header,body .word-header { display:flex; align-items:center; padding:19px 20px 16px!important; margin:0!important; border-bottom:1px solid var(--line)!important; background:none!important; cursor:default; gap:10px; min-height:65px; }
 body .feed-name,body .word-name { color:var(--ink)!important; font-size:16px; font-weight:700; line-height:24px; }
-body .feed-name:before,body .word-name:before { content:attr(data-initial); display:inline-flex; align-items:center; justify-content:center; background:color-mix(in srgb,var(--source-color) 12%,var(--paper)); color:var(--source-color); width:29px; height:29px; border-radius:9px; margin-right:9px; font-size:14px; vertical-align:middle; }
+body .feed-name:before,body .word-name:before { content:attr(data-initial); display:inline-flex; align-items:center; justify-content:center; background:var(--canvas); color:var(--source-color); width:29px; height:29px; border-radius:9px; margin-right:9px; font-size:14px; vertical-align:middle; }
 body .feed-count,body .word-count { margin-left:auto; white-space:nowrap; background:none!important; color:var(--muted)!important; font-size:12px; font-weight:400; }
 body .word-info { display:flex; width:100%; align-items:center; }
 .word-index,.tab-bar-wrapper { display:none!important; }
