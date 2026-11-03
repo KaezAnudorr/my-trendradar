@@ -707,13 +707,19 @@ class NewsAnalyzer:
 
         self._hotlist_total_count = total_titles
 
-        # 如果是 platform 模式，转换数据结构
-        if self.ctx.display_mode == "platform" and stats:
+        # 按来源分组同时应用于热榜、RSS 主区与 RSS 新增区。
+        if self.ctx.display_mode == "platform":
             stats = convert_keyword_stats_to_platform_stats(
-                stats,
-                self.ctx.weight_config,
-                self.ctx.rank_threshold,
+                stats, self.ctx.weight_config, self.ctx.rank_threshold,
             )
+            if rss_items:
+                rss_items = convert_keyword_stats_to_platform_stats(
+                    rss_items, self.ctx.weight_config, self.ctx.rank_threshold,
+                )
+            if rss_new_items:
+                rss_new_items = convert_keyword_stats_to_platform_stats(
+                    rss_new_items, self.ctx.weight_config, self.ctx.rank_threshold,
+                )
 
         # AI 分析（如果启用，用于 HTML 报告）
         ai_result = None
