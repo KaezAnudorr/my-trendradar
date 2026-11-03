@@ -24,7 +24,9 @@ jobs:
         run: uv sync --frozen --no-dev
 
       - name: Verify source grouping before API calls
-        run: uv run python -m unittest discover -v -s tests -p "test_source_grouping.py"
+        run: |
+          uv run python -m unittest discover -v -s tests -p "test_source_grouping.py"
+          uv run python -m unittest discover -v -s tests -p "test_rss_total_count.py"
 
       # Only the runner's local copy is changed; scheduled jobs stay report-only.
       - name: Enable AI and notification for this test
