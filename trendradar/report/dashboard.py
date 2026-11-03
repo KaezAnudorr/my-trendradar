@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
     rssSections.forEach(section => {
         const label = document.createElement('h2');
         label.className = 'dashboard-section-label';
-        label.innerHTML = '我的订阅 <span>时效内全量内容 · 卡片内滚动阅读</span>';
+        label.innerHTML = '我的订阅 <span>文章按时效筛选 · 榜单为当前快照</span>';
         section.prepend(label);
         hotLabel.before(section);
     });
