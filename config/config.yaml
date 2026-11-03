@@ -197,11 +197,6 @@ rss:
       url: "https://mshibanami.github.io/GitHubTrendingRSS/daily/all.xml"
       max_age_days: 3
 
-    - id: "douban-coming"
-      name: "豆瓣·即将上映"
-      url: "https://rsshub.rss.tips/douban/movie/coming"
-      max_age_days: 7
-
     - id: "gcores"
       name: "机核文章"
       url: "https://rsshub.rss.tips/gcores/articles"
@@ -305,7 +300,7 @@ display:
   # 推送展示由 regions.standalone 控制，AI 分析由 ai_analysis.include_standalone 控制
   standalone:
     platforms: []     # 热榜平台 ID 列表（如 ["zhihu", "weibo"]）
-    rss_feeds: ["github-trending", "douban-coming", "gcores"]                                # RSS 源 ID 列表（如 ["hacker-news"]）
+    rss_feeds: ["github-trending", "gcores"]                                # RSS 源 ID 列表（如 ["hacker-news"]）
     max_items: 20                                # 每个源最多展示条数（0=不限制）
 
 
