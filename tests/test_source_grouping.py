@@ -15,13 +15,13 @@ class SourceGroupingTests(unittest.TestCase):
         rss = [
             {"word": "AI", "count": 2, "titles": [
                 {"title": "First", "source_name": "Huxiu", "url": "https://example.com/1",
-                 "ranks": [1], "count": 1, "is_new": True, "time_display": "12:00"},
+                 "rank_threshold": 5, "mobile_url": "", "ranks": [1], "count": 1, "is_new": True, "time_display": "12:00"},
                 {"title": "Second", "source_name": "Wallstreet", "url": "https://example.com/2",
-                 "ranks": [2], "count": 1, "is_new": False, "time_display": "11:00"},
+                 "rank_threshold": 5, "mobile_url": "", "ranks": [2], "count": 1, "is_new": False, "time_display": "11:00"},
             ]},
             {"word": "Tools", "count": 1, "titles": [
                 {"title": "Third", "source_name": "Huxiu", "url": "https://example.com/3",
-                 "ranks": [3], "count": 1, "is_new": True, "time_display": "10:00"},
+                 "rank_threshold": 5, "mobile_url": "", "ranks": [3], "count": 1, "is_new": True, "time_display": "10:00"},
             ]},
         ]
         original = copy.deepcopy(rss)
