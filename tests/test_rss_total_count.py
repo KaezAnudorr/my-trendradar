@@ -66,6 +66,30 @@ class RssTotalCountTests(unittest.TestCase):
     def make_analyzer(self, mode):
         return _make_analyzer(mode, self.items[:2], self.items[:4], self.items)
 
+    def test_rss_keyword_filter_defaults_to_existing_behavior(self):
+        from trendradar.core.loader import _load_rss_config
+        self.assertTrue(_load_rss_config({})["KEYWORD_FILTER"])
+        self.assertFalse(_load_rss_config({"rss": {"keyword_filter": False}})["KEYWORD_FILTER"])
+
+    def test_rss_keyword_filter_can_be_disabled_without_disabling_freshness(self):
+        self.items[0].published_at = "2026-10-20T08:00:00+08:00"
+        now = datetime(2026, 10, 29, 4, tzinfo=timezone.utc)
+        with patch("trendradar.utils.time.get_configured_time", return_value=now):
+            for mode, expected in self.MODE_TOTALS:
+                with self.subTest(mode=mode):
+                    analyzer = self.make_analyzer(mode)
+                    analyzer.ctx.rss_config["KEYWORD_FILTER"] = False
+                    analyzer.ctx.rss_config["FRESHNESS_FILTER"]["ENABLED"] = True
+                    stats, new_stats, raw_items, _ = analyzer._process_rss_data_by_mode(self.rss_data)
+                    self.assertEqual(sum(stat["count"] for stat in stats), expected - 1)
+                    self.assertEqual(len(raw_items), expected - 1)
+                    self.assertEqual(analyzer._rss_total_count, expected - 1)
+                    analyzer.ctx.load_frequency_words.assert_not_called()
+                    if mode == "incremental":
+                        self.assertIsNone(new_stats)
+                    else:
+                        self.assertEqual(sum(stat["count"] for stat in new_stats), 1)
+
     def test_total_count_kept_when_keyword_match_is_empty(self):
         for mode, expected in self.MODE_TOTALS:
             with self.subTest(mode=mode):
