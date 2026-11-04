@@ -13,6 +13,11 @@ on:
       - trendradar/core/analyzer.py
       - trendradar/__main__.py
       - tests/test_source_grouping.py
+      - tests/test_hourly_digest.py
+      - tools/check_four_apis.py
+      - trendradar/notification/ledger.py
+      - trendradar/ai/analyzer.py
+      - trendradar/core/loader.py
       - .github/actions/dailyhot/**
       - .github/workflows/crawler.yml
   schedule:
@@ -49,22 +54,23 @@ on:
     #   "15 * * * *"     → 每小时第15分钟 / minute 15 every hour
     #   "30 0-14 * * *"  → 北京时间 8:00-22:00 每小时第30分钟 / Beijing 8am-10pm
     #
-    - cron: "33 * * * *"
+    # UTC 14:00 = 北京时间 22:00；每个整点触发。
+    - cron: "0 * * * *"
 
   workflow_dispatch:
 
 concurrency:
   group: crawler-${{ github.ref_name }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
   actions: write
 
 jobs:
   crawl:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 45
 
     steps:
       - name: Checkout repository
@@ -125,6 +131,17 @@ jobs:
       #     sleep ${DELAY}s
       #     echo "▶️  Delay finished. Starting crawler..."
 
+      - name: Restore cumulative news and delivered-message state
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RUN=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=trendradar-state&per_page=1" --jq '.artifacts[] | select(.expired == false) | .workflow_run.id' | head -n 1)
+          if [ -n "$RUN" ]; then
+            gh run download "$RUN" --repo "${{ github.repository }}" --name trendradar-state --dir output
+          else
+            echo "First stateful run: establish a silent notification baseline"
+          fi
+
       - name: Set up Python
         if: success()
         uses: actions/setup-python@v6
@@ -152,6 +169,7 @@ jobs:
           uv run python -m unittest discover -s tests -p test_dashboard.py -v
           uv run python -m unittest discover -s tests -p test_dailyhot_feeds.py -v
           uv run python -m unittest discover -s tests -p test_source_grouping.py -v
+          uv run python -m unittest discover -s tests -p test_hourly_digest.py -v
 
       - name: Prepare DailyHot source snapshots
         id: dailyhot
@@ -185,7 +203,6 @@ jobs:
           GENERIC_WEBHOOK_URL: ${{ secrets.GENERIC_WEBHOOK_URL }}
           GENERIC_WEBHOOK_TEMPLATE: ${{ secrets.GENERIC_WEBHOOK_TEMPLATE }}
           # AI 配置（ai_analysis 和 ai_translation 共享模型配置）
-          AI_ANALYSIS_ENABLED: ${{ secrets.AI_ANALYSIS_ENABLED }}
           AI_API_KEY: ${{ secrets.AI_API_KEY }}
           AI_MODEL: ${{ secrets.AI_MODEL }}
           AI_API_BASE: ${{ secrets.AI_API_BASE }}
@@ -197,6 +214,18 @@ jobs:
           S3_REGION: ${{ secrets.S3_REGION }}
           GITHUB_ACTIONS: true
         run: uv run python -m trendradar
+
+      - name: Save cumulative news and notification state
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trendradar-state
+          path: |
+            output/news/*.db
+            output/rss/*.db
+            output/push-state.json
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Upload HTML report
         uses: actions/upload-artifact@v4
@@ -261,3 +290,21 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy cloudflare_dist --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }}
+
+      # A generated data branch for the local reader, not a hosted website.
+      - name: Publish latest public-news snapshot for the local reader
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/trendradar-preview"
+          REPORT=$(find output/html/latest -name '*.html' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-)
+          cp "$REPORT" "$RUNNER_TEMP/trendradar-preview/current.html"
+          gh auth setup-git --hostname github.com
+          cd "$RUNNER_TEMP/trendradar-preview"
+          git init -b generated-preview
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add current.html
+          git commit -m 'Update generated news preview'
+          git remote add origin "https://github.com/${{ github.repository }}.git"
+          git push --force origin HEAD:refs/heads/generated-preview
