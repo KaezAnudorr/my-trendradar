@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.hotlist-section').forEach(section => section.remove());
     const hotLabel = document.createElement('h2');
     hotLabel.className = 'dashboard-section-label';
-    hotLabel.innerHTML = '热门榜单 <span>保留关键词筛选</span>';
+    hotLabel.innerHTML = '热门榜单 <span>完整榜单 · 推送仅新增</span>';
     toolbar.after(hotLabel, hotGrid);
     const rssSections = Array.from(document.querySelectorAll('.rss-section'));
     rssSections.forEach(section => {
