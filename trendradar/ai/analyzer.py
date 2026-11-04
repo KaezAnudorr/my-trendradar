@@ -143,6 +143,12 @@ class AIAnalyzer:
         """
         
         # 打印配置信息方便调试
+        if self.analysis_config.get("ANALYZE_ALL_NEWS", False):
+            hot = [item for group in stats for item in group.get("titles", [])]
+            rss = [item for group in (rss_stats or []) for item in group.get("titles", [])] if self.include_rss else []
+            if len(hot) + len(rss) > self.max_news:
+                return self._analyze_all(hot, rss, report_mode, report_type, platforms)
+
         model = self.ai_config.get("MODEL", "unknown")
         api_key = self.client.api_key or ""
         api_base = self.ai_config.get("API_BASE", "")
@@ -268,6 +274,40 @@ class AIAnalyzer:
                 success=False,
                 error=friendly_msg
             )
+
+    def _analyze_all(self, hot, rss, report_mode, report_type, platforms):
+        """Cover every article in bounded batches, then synthesize their summaries."""
+        worker_config = {**self.analysis_config, "ANALYZE_ALL_NEWS": False}
+        worker = AIAnalyzer(self.ai_config, worker_config, self.get_time_func, debug=self.debug)
+        articles = [(False, item) for item in hot] + [(True, item) for item in rss]
+        summaries = []
+        for offset in range(0, len(articles), self.max_news):
+            batch = articles[offset:offset + self.max_news]
+            hot_batch = [item for is_rss, item in batch if not is_rss]
+            rss_batch = [item for is_rss, item in batch if is_rss]
+            result = worker.analyze(
+                [{"word": "当日热榜", "titles": hot_batch}],
+                [{"word": "当日订阅", "titles": rss_batch}],
+                report_mode, f"{report_type} · 第 {len(summaries) + 1} 批", platforms,
+            )
+            if not result.success:
+                return AIAnalysisResult(success=False, error=f"全量分析第 {len(summaries) + 1} 批失败：{result.error}")
+            summaries.append({"title": json.dumps({field: getattr(result, field) for field in (
+                "core_trends", "sentiment_controversy", "signals", "rss_insights", "outlook_strategy")}, ensure_ascii=False),
+                "source_name": f"第 {len(summaries) + 1} 批，共 {len(batch)} 条"})
+        # Each intermediate summary covers a disjoint portion of the day's articles.
+        worker.max_news = len(summaries)
+        final = worker.analyze([], [{"word": "全日分批摘要（综合归纳，合并重复事件）", "titles": summaries}],
+                               report_mode, f"{report_type} · 全日综合", platforms)
+        final.total_news = len(articles)
+        final.analyzed_news = len(articles) if final.success else 0
+        final.hotlist_count = len(hot)
+        final.rss_count = len(rss)
+        final.hotlist_analyzed = len(hot) if final.success else 0
+        final.rss_analyzed = len(rss) if final.success else 0
+        final.max_news_limit = len(articles)
+        print(f"[AI] 全量分批分析：{len(articles)} 条 / {len(summaries)} 批，综合成功={final.success}")
+        return final
 
     def _prepare_news_content(
         self,
