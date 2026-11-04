@@ -7,6 +7,7 @@ TrendRadar 主程序
 """
 
 import argparse
+import json
 import os
 import webbrowser
 from pathlib import Path
@@ -158,6 +159,7 @@ class NewsAnalyzer:
     def _has_notification_configured(self) -> bool:
         """检查是否配置了任何通知渠道"""
         cfg = self.ctx.config
+
         return any(
             [
                 cfg["FEISHU_WEBHOOK_URL"],
@@ -817,10 +819,33 @@ class NewsAnalyzer:
         has_notification = self._has_notification_configured()
         cfg = self.ctx.config
 
+        ledger = None
+        delivered_keys = set()
+        summary_only = cfg.get("NOTIFICATION_NEW_ONLY", False) and schedule.analyze
+        if cfg.get("NOTIFICATION_NEW_ONLY", False) and cfg["ENABLE_NOTIFICATION"] and has_notification:
+            from trendradar.notification.ledger import PushLedger
+            ledger = PushLedger(Path(cfg["STORAGE"]["LOCAL"]["DATA_DIR"]) / "push-state.json")
+            if summary_only:
+                if not ai_result or not ai_result.success:
+                    print("[推送] 晚间总结未成功生成，不发送重复新闻代替总结")
+                    return False
+                stats, rss_items, rss_new_items, new_titles, standalone_data = [], [], [], {}, None
+                report_type = "22:00 全日 AI 总结"
+            else:
+                stats, hot_keys = ledger.select(stats)
+                rss_items, rss_keys = ledger.select(rss_items)
+                delivered_keys = hot_keys | rss_keys
+                rss_new_items, new_titles, standalone_data = None, {}, None
+                report_type = "每小时新增资讯"
+                if not ledger.exists:
+                    ledger.commit(delivered_keys)
+                    print(f"[推送] 首次建立 {len(delivered_keys)} 条基线，不批量补推旧消息")
+                    return False
+
         # 检查是否有有效内容（热榜或RSS）
         has_news_content = self._has_valid_content(stats, new_titles)
         has_rss_content = bool(rss_items and len(rss_items) > 0)
-        has_any_content = has_news_content or has_rss_content
+        has_any_content = has_news_content or has_rss_content or summary_only
 
         # 计算热榜匹配条数
         news_count = sum(len(stat.get("titles", [])) for stat in stats) if stats else 0
@@ -870,7 +895,7 @@ class NewsAnalyzer:
             # 注入元数据（用于推送头部展示）
             report_data["hotlist_total"] = self._hotlist_total_count
             report_data["platform_total"] = len(self.ctx.platform_ids)
-            report_data["rss_matched_count"] = self._rss_matched_count
+            report_data["rss_matched_count"] = rss_count if ledger is not None and not summary_only else self._rss_matched_count
             report_data["rss_total_count"] = self._rss_total_count
             report_data["rss_source_total"] = self._rss_source_total
             report_data["rss_source_failed"] = self._rss_source_failed
@@ -901,12 +926,14 @@ class NewsAnalyzer:
 
             # 记录推送成功
             if any(results.values()):
+                if ledger is not None and not summary_only:
+                    ledger.commit(delivered_keys)
                 if schedule.once_push and schedule.period_key:
                     scheduler = self.ctx.create_scheduler()
                     date_str = self.ctx.format_date()
                     scheduler.record_execution(schedule.period_key, "push", date_str)
 
-            return True
+            return any(results.values())
 
         elif cfg["ENABLE_NOTIFICATION"] and not has_notification:
             print("⚠️ 警告：通知功能已启用但未配置任何通知渠道，将跳过通知发送")
@@ -974,6 +1001,15 @@ class NewsAnalyzer:
         results, id_to_name, failed_ids = self.data_fetcher.crawl_websites(
             ids, self.request_interval, domain_rules=domain_rules
         )
+
+        alternatives = Path("output/dailyhot/four-apis.json")
+        if alternatives.exists():
+            for source_id, items in json.loads(alternatives.read_text(encoding="utf-8"))["platforms"].items():
+                if len(items) > len(results.get(source_id, {})):
+                    print(f"[热榜] {source_id}: DailyHot {len(items)} 条替代原接口 {len(results.get(source_id, {}))} 条")
+                    results[source_id] = items
+                    if source_id in failed_ids:
+                        failed_ids.remove(source_id)
 
         # 转换为 NewsData 格式并保存到存储后端
         crawl_time = self.ctx.format_time()
