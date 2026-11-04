@@ -35,6 +35,7 @@ runs:
         done
         curl -fsS http://127.0.0.1:6688/all > /dev/null
         PYTHONPATH=. uv run python tools/dailyhot_feeds.py
+        PYTHONPATH=. uv run python tools/check_four_apis.py
         nohup python -m http.server 6689 --bind 127.0.0.1 --directory output/dailyhot > output/dailyhot-feed-server.log 2>&1 &
         for i in $(seq 1 10); do
           if curl -fsS http://127.0.0.1:6689/integration-results.json > /dev/null; then break; fi
