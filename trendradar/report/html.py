@@ -1546,7 +1546,7 @@ def render_html_content(
         else:
             ai_value = "待配置"
     else:
-        ai_value = "未启用"
+        ai_value = "本轮未运行"
     html += f"""
                     <div class="info-item">
                         <span class="info-label">AI 分析</span>
