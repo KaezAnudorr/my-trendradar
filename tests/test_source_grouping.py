@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 with patch.dict(os.environ, {"LITELLM_LOCAL_MODEL_COST_MAP": "True"}):
     from trendradar.__main__ import NewsAnalyzer
+    from trendradar.core.analyzer import convert_keyword_stats_to_platform_stats
     from trendradar.notification.splitter import split_content_into_batches
 
 
@@ -20,7 +21,7 @@ class SourceGroupingTests(unittest.TestCase):
                  "rank_threshold": 5, "mobile_url": "", "ranks": [2], "count": 1, "is_new": False, "time_display": "11:00"},
             ]},
             {"word": "Tools", "count": 1, "titles": [
-                {"title": "Third", "source_name": "Huxiu", "url": "https://example.com/3",
+                {"title": "First", "source_name": "Huxiu", "url": "https://example.com/3",
                  "rank_threshold": 5, "mobile_url": "", "ranks": [3], "count": 1, "is_new": True, "time_display": "10:00"},
             ]},
         ]
@@ -52,7 +53,7 @@ class SourceGroupingTests(unittest.TestCase):
                                      ["Huxiu", "Wallstreet"] if mode == "platform" else ["AI"])
                     self.assertEqual(analyzer._rss_matched_count, 3)
                     if mode == "platform":
-                        self.assertEqual([item["title"] for item in main[0]["titles"]], ["First", "Third"])
+                        self.assertEqual([item["title"] for item in main[0]["titles"]], ["First", "First"])
                         self.assertEqual(main[0]["titles"][0]["url"], "https://example.com/1")
                         self.assertTrue(main[0]["titles"][0]["is_new"])
                         rendered = "\n".join(split_content_into_batches(
@@ -65,6 +66,17 @@ class SourceGroupingTests(unittest.TestCase):
                     else:
                         self.assertIs(main, rss)
         self.assertEqual(rss, original)
+
+    def test_url_dedup_keeps_distinct_articles_without_changing_hotlist_default(self):
+        items = [{"title": "Weekly review", "url": url, "source_name": "Source",
+                  "ranks": [1], "count": 1} for url in (
+                      "https://example.com/1", "https://example.com/2", "https://example.com/1")]
+        stats = [{"word": "All", "count": 3, "titles": items}]
+        weight = {"RANK_WEIGHT": 0.6, "FREQUENCY_WEIGHT": 0.3, "HOTNESS_WEIGHT": 0.1}
+        self.assertEqual(convert_keyword_stats_to_platform_stats(stats, weight)[0]["count"], 1)
+        rss = convert_keyword_stats_to_platform_stats(stats, weight, deduplicate_by_url=True)
+        self.assertEqual([item["url"] for item in rss[0]["titles"]],
+                         ["https://example.com/1", "https://example.com/2"])
 
 
 if __name__ == "__main__":
