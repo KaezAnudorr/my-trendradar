@@ -44,7 +44,8 @@ jobs:
           import yaml
           path = Path("config/config.yaml")
           config = yaml.safe_load(path.read_text(encoding="utf-8"))
-          config["notification"]["enabled"] = True
+          config["schedule"]["enabled"] = False
+          config["notification"].update(enabled=True, new_only=False)
           config["ai_analysis"].update(enabled=True, include_rss=True)
           path.write_text(yaml.safe_dump(config, allow_unicode=True, sort_keys=False), encoding="utf-8")
           PY
