@@ -93,6 +93,7 @@ def _load_notification_config(config_data: Dict) -> Dict:
 
     return {
         "ENABLE_NOTIFICATION": notification.get("enabled", True),
+        "NOTIFICATION_NEW_ONLY": notification.get("new_only", False),
         "MESSAGE_BATCH_SIZE": batch_size.get("default", 4000),
         "DINGTALK_BATCH_SIZE": batch_size.get("dingtalk", 20000),
         "FEISHU_BATCH_SIZE": batch_size.get("feishu", 29000),
@@ -287,6 +288,7 @@ def _load_ai_analysis_config(config_data: Dict) -> Dict:
         "PROMPT_FILE": ai_config.get("prompt_file", "ai_analysis_prompt.txt"),
         "MODE": ai_config.get("mode", "follow_report"),
         "MAX_NEWS_FOR_ANALYSIS": ai_config.get("max_news_for_analysis", 50),
+        "ANALYZE_ALL_NEWS": ai_config.get("analyze_all_news", False),
         "INCLUDE_RSS": ai_config.get("include_rss", True),
         "INCLUDE_RANK_TIMELINE": ai_config.get("include_rank_timeline", False),
         "INCLUDE_STANDALONE": ai_config.get("include_standalone", False),
