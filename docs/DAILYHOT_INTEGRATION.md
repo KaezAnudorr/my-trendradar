@@ -5,9 +5,9 @@
 定时抓取会临时构建并运行固定版本 DailyHotApi，将选定来源转换为 TrendRadar 已支持的 JSON Feed，再与现有 RSS 一起生成报告。无需常驻服务器，任务结束后临时服务随 runner 退出。
 
 - 基础订阅：15 个，仍保存在 `config/config.yaml`。
-- DailyHot 补充：11 个，配置在 `integrations/dailyhot/feeds.yaml`。
-- 默认来源总数：26 个 RSS/JSON Feed，另有原来的 11 个热榜平台。
-- AI、通知开关没有开启；手动 AI/飞书测试工作流也使用相同新增源。
+- DailyHot 补充：12 个，配置在 `integrations/dailyhot/feeds.yaml`。
+- 默认来源总数：27 个 RSS/JSON Feed，另有原来的 11 个热榜平台。
+- 已开启每小时新增消息推送和北京时间 22:00 的全日 AI 汇总，详见 [刷新与推送说明](HOURLY_DIGEST.md)。手动 AI/飞书测试工作流也使用相同新增源。
 - 豆瓣不加入。DailyHot 的 CSDN、LinuxDo、Product Hunt、GameRes 等失败或空源不加入。
 
 ## 重复来源按内容完整度选，而不是按条数硬替换
@@ -29,11 +29,17 @@
 [九组对比及逐篇证据](https://github.com/KaezAnudorr/my-trendradar/actions/runs/41608730077)。
 [官方 RSS、HN 扩容和 IT 链接的补充实测](https://github.com/KaezAnudorr/my-trendradar/actions/runs/41609565315)。
 
-## 新增的 11 个来源
+## 新增的 12 个来源
 
-果壳、爱范儿、极客公园、51CTO、HelloGitHub、游研社、微信读书、什么值得买，以及少数派热门精选、36氪人气文章、虎嗅24小时快讯。
+果壳、爱范儿、极客公园、51CTO、HelloGitHub、游研社、微信读书、什么值得买，以及少数派热门精选、36氪人气文章、虎嗅24小时快讯、哔哩哔哩热门视频。
 
 新增源在名称中标注“快照”。文章型原生 RSS 继续按原来的 1/3/7 天时效筛选；快照源展示当前榜单，`max_age_days: 0`，保留全部条目，不把旧发表时间与“仍在榜”混淆。
+
+## 四个热榜接口补充验证
+
+2026-11-04 实测 DailyHot：B站热门视频 100 条、微博 51 条、抖音 48 条、知乎 29 条。微博、抖音、知乎与现有 NewsNow 的同类榜单逐轮比较有效条目数，采用较完整者；B站热门视频与搜索词热榜含义不同，作为独立订阅补充，不相互替换。热榜展示完整条目，不再通过关键词缩小列表。
+
+[实测运行与接口快照](https://github.com/KaezAnudorr/my-trendradar/actions/runs/41758423460)。
 
 ## 保留原始元数据，不伪造发布时间
 
