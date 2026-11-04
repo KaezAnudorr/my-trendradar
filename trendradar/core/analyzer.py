@@ -713,6 +713,8 @@ def convert_keyword_stats_to_platform_stats(
     keyword_stats: List[Dict],
     weight_config: Dict,
     rank_threshold: int = 5,
+    *,
+    deduplicate_by_url: bool = False,
 ) -> List[Dict]:
     """
     将按关键词分组的统计数据转换为按平台分组的统计数据
@@ -721,6 +723,7 @@ def convert_keyword_stats_to_platform_stats(
         keyword_stats: 原始按关键词分组的统计数据
         weight_config: 权重配置
         rank_threshold: 排名阈值
+        deduplicate_by_url: RSS 按链接去重，保留标题相同的不同文章
 
     Returns:
         按平台分组的统计数据，格式与原 stats 一致
@@ -741,12 +744,12 @@ def convert_keyword_stats_to_platform_stats(
             title_with_keyword["matched_keyword"] = keyword
             platform_map[source_name].append(title_with_keyword)
 
-    # 2. 去重（同一平台下相同标题只保留一条，保留第一个匹配的关键词）
+    # 2. 热榜按标题去重；RSS 按文章链接去重。
     for source_name, titles in platform_map.items():
         seen_titles: Dict[str, bool] = {}
         unique_titles = []
         for title_data in titles:
-            title_text = title_data["title"]
+            title_text = (title_data.get("url") or title_data["title"]) if deduplicate_by_url else title_data["title"]
             if title_text not in seen_titles:
                 seen_titles[title_text] = True
                 unique_titles.append(title_data)
