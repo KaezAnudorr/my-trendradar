@@ -33,7 +33,7 @@ DailyHotApi 提供 bilibili、weibo、douyin、zhihu 四条接口；每次准备
 
 这不是 GitHub Pages 网站。Actions 把公开新闻报告更新到专用的 generated-preview 分支，本机服务从该分支读取，不需要在本机保存 GitHub token 或 AI 密钥。该分支只保存最新生成报告，由工作流整体替换，不用于手工编辑。
 
-本机服务代码：tools/serve_preview.py。停止后可运行本机工作目录中的 Start-TrendRadar.ps1 重新启动。
+本机服务代码：tools/serve_preview.py。停止后用 Python 运行该脚本，并通过 --directory 指定本机报告目录，即可重新启动；默认端口为 8765。
 
 ## 修改和测试
 
