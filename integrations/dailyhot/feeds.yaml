@@ -12,3 +12,4 @@ feeds:
   - {id: dailyhot-sspai, route: sspai, name: '少数派 · 热门精选快照'}
   - {id: dailyhot-36kr, route: 36kr, name: '36氪 · 人气文章快照'}
   - {id: dailyhot-huxiu, route: huxiu, name: '虎嗅 · 24小时快讯快照'}
+  - {id: dailyhot-bilibili, route: bilibili, name: '哔哩哔哩 · 热门视频快照'}
