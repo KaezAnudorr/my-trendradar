@@ -715,10 +715,12 @@ class NewsAnalyzer:
             if rss_items:
                 rss_items = convert_keyword_stats_to_platform_stats(
                     rss_items, self.ctx.weight_config, self.ctx.rank_threshold,
+                    deduplicate_by_url=True,
                 )
             if rss_new_items:
                 rss_new_items = convert_keyword_stats_to_platform_stats(
                     rss_new_items, self.ctx.weight_config, self.ctx.rank_threshold,
+                    deduplicate_by_url=True,
                 )
 
         # AI 分析（如果启用，用于 HTML 报告）
