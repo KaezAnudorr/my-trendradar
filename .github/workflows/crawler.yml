@@ -54,8 +54,10 @@ on:
     #   "15 * * * *"     → 每小时第15分钟 / minute 15 every hour
     #   "30 0-14 * * *"  → 北京时间 8:00-22:00 每小时第30分钟 / Beijing 8am-10pm
     #
-    # UTC 14:00 = 北京时间 22:00；每个整点触发。
-    - cron: "0 * * * *"
+    # 北京时间每小时第 7 分钟错峰抓取；22 点改为单独的整点总结。
+    # UTC 14:00 = 北京时间 22:00。GitHub 排队可能延迟，cron 不是准点保证。
+    - cron: "7 0-13,15-23 * * *"
+    - cron: "0 14 * * *"
 
   workflow_dispatch:
 
@@ -71,6 +73,8 @@ jobs:
   crawl:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      TZ: Asia/Shanghai
 
     steps:
       - name: Checkout repository
