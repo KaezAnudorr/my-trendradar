@@ -27,7 +27,7 @@ DailyHotApi 提供 bilibili、weibo、douyin、zhihu 四条接口；每次准备
 
 每次运行恢复上一份 trendradar-state artifact，其中包括每天的 SQLite 数据和 push-state.json。成功推送后才记录文章身份，跨日不重复推旧消息；推送失败不写成功记录。数据库保留最近三天，状态 artifact 保留十四天。连续长于十四天没有成功运行时，旧 artifact 会过期，恢复后重新建立静默基线。
 
-定时任务串行运行，不取消正在抓取和推送的上一轮。每七天需运行一次 Check In 续期。到期仅暂停抓取，不删除历史。续期时打开仓库 Actions → Check In → Run workflow，选择 master 并运行；成功后重新启用 Get Hot News，并自动抓取一轮。周期从最近一次成功签到起计算。签到不会删除运行记录、累计新闻或推送去重附件。
+定时任务串行运行，不取消正在抓取和推送的上一轮。已移除项目自带的七天到期检查和 Check In 工作流，无需签到续期。GitHub 平台自身的 Actions 可用性和定时触发限制仍然适用。
 
 ## 本机同步的数据位置
 
