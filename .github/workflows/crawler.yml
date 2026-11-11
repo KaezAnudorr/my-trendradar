@@ -53,9 +53,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          RUN=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=trendradar-state&per_page=1" --jq '.artifacts[] | select(.expired == false) | .workflow_run.id' | head -n 1)
+          RUN=$(gh api "repos/${{ github.repository }}/actions/workflows/crawler.yml/runs?status=success&per_page=1" --jq '.workflow_runs[0].id // empty')
           if [ -n "$RUN" ]; then
-            gh run download "$RUN" --repo "${{ github.repository }}" --name trendradar-state --dir output
+            STATE_DIR="$RUNNER_TEMP/trendradar-state"
+            gh run download "$RUN" --repo "${{ github.repository }}" --name trendradar-state --dir "$STATE_DIR"
+            mkdir -p output
+            cp -R "$STATE_DIR"/. output/
           else
             echo "First stateful run: establish a silent notification baseline"
           fi
