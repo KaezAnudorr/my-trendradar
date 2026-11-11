@@ -1,28 +1,26 @@
 name: Check In
 
-# ✅ 签到续期：运行此 workflow 可重置 7 天计时，保持 "Get Hot News" 正常运行
-# ✅ Renewal: Run this workflow to reset the 7-day timer and keep "Get Hot News" active
-#
-# 📌 操作方法 / How to use:
-#   1. 点击 "Run workflow" 按钮 / Click "Run workflow" button
-#   2. 每 7 天内至少运行一次 / Run at least once every 7 days
-
+# 每 7 天手动签到续期，保留运行历史、新闻数据库和推送去重附件。
+# 修改此文件也视为一次显式签到；成功后自动运行 Get Hot News。
 on:
   workflow_dispatch:
+  push:
+    branches: [master]
+    paths: [.github/workflows/clean-crawler.yml]
+
+permissions:
+  actions: write
+  contents: read
 
 jobs:
-  del_runs:
+  renew:
     runs-on: ubuntu-latest
-    permissions:
-      actions: write
-      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TZ: Asia/Shanghai
     steps:
-      - name: Delete all workflow runs
-        uses: Mattraks/delete-workflow-runs@v2
-        with:
-          token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          retain_days: 0
-          keep_minimum_runs: 0
-          delete_workflow_by_state_pattern: "ALL"
-          delete_run_by_conclusion_pattern: "ALL"
+      - name: Re-enable hourly news workflow without deleting history
+        run: |
+          gh workflow enable crawler.yml --repo "${{ github.repository }}"
+          echo "✅ 签到成功，北京时间 $(date '+%Y-%m-%d %H:%M:%S %Z')；续期 7 天。"
+          echo "运行历史、累计新闻和推送去重记录均保留；完成后自动触发抓取。"
